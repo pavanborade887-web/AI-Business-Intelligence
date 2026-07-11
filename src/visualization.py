@@ -1,4 +1,5 @@
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 from data_loader import load_data
 
@@ -72,7 +73,84 @@ def monthly_sales_chart(df):
 
     plt.show()
 
+# Histogram
 
+def sales_histogram(df):
+
+    plt.figure(figsize=(8, 5))
+
+    plt.hist(
+        df["Sales"],
+        bins=10,
+        edgecolor="black"
+    )
+
+    plt.title("Sales Distribution")
+    plt.xlabel("Sales")
+    plt.ylabel("Frequency")
+
+    plt.grid(True)
+
+    plt.show()
+
+# Scatter Plot
+
+def sales_profit_scatter(df):
+
+    plt.figure(figsize=(8, 5))
+
+    plt.scatter(
+        df["Sales"],
+        df["Profit"],
+        alpha=0.6
+    )
+
+    plt.title("Sales vs Profit")
+
+    plt.xlabel("Sales")
+    plt.ylabel("Profit")
+
+    plt.grid(True)
+
+    plt.show()
+
+# Boxplot 
+
+def sales_boxplot(df):
+
+    plt.figure(figsize=(8, 5))
+
+    plt.boxplot(
+        df["Sales"],
+        vert=True
+    )
+
+    plt.title("Sales Box Plot")
+
+    plt.ylabel("Sales")
+
+    plt.grid(True)
+
+    plt.show()
+
+# Correlation Heatmap
+
+def correlation_heatmap(df):
+
+    plt.figure(figsize=(12, 8))
+
+    correlation = df.corr(numeric_only=True)
+
+    sns.heatmap(
+        correlation,
+        annot=True,
+        cmap="coolwarm",
+        fmt=".2f"
+    )
+
+    plt.title("Correlation Heatmap")
+
+    plt.show()
 # Load Dataset
 df = load_data("data/raw/superstore_sales.csv")
 
@@ -80,3 +158,7 @@ df = load_data("data/raw/superstore_sales.csv")
 region_sales_chart(df)
 category_sales_chart(df)
 monthly_sales_chart(df)
+sales_histogram(df)
+sales_profit_scatter(df)
+sales_boxplot(df)
+correlation_heatmap(df)
