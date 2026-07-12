@@ -12,6 +12,7 @@ from sklearn.metrics import (
 )
 
 import joblib
+import os
 
 
 # ==============================
@@ -132,7 +133,18 @@ else:
     best_model = lr_model
     best_model_name = "Linear Regression"
 
-joblib.dump(best_model, "models/final_model.pkl")
+# Create models folder if it doesn't exist
+os.makedirs("models", exist_ok=True)
+
+# Save model + metadata together
+model_info = {
+    "model": best_model,
+    "algorithm": best_model_name,
+    "target": target_column,
+    "features": X.columns.tolist()
+}
+
+joblib.dump(model_info, "models/final_model.pkl")
 
 print("\n========== FINAL MODEL ==========")
 print("Best Model :", best_model_name)

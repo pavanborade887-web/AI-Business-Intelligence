@@ -1,40 +1,48 @@
 import joblib
-import pandas as pd
+
 from data_loader import load_data
+from feature_engineering import feature_engineering
 
-# save model loaded
-sales_model = joblib.load("models/sales_model.pkl")
 
-print("Model Loaded Successfully!")
+def predict(file_path):
+    """
+    Predict using the trained model.
+    """
 
-# dataset load
-df = load_data("data/raw/superstore_sales.csv")
+    # Load model information
+    model_info = joblib.load("models/final_model.pkl")
 
-df["Order_Date"] = pd.to_datetime(df["Order_Date"])
+    model = model_info["model"]
+    target = model_info["target"]
+    trained_features = model_info["features"]
 
-df["Year"] = df["Order_Date"].dt.year
-df["Month"] = df["Order_Date"].dt.month
-df["Day"] = df["Order_Date"].dt.day
+    # Load new dataset
+    df = load_data(file_path)
 
-df = pd.get_dummies(
-    df,
-    columns=["Region", "Category"],
-    dtype=int
-)
+    # Apply feature engineering
+    df = feature_engineering(df)
 
-# features create
-X = df.drop(
-    columns=[
-        "Sales",
-        "Profit",
-        "Order_ID",
-        "Order_Date",
-        "Customer",
-        "Product"
-    ]
-)
+    # Remove target column if present
+    if target in df.columns:
+        df = df.drop(columns=[target])
 
-# prediction on first 5 rows
-predictions = sales_model.predict(X.head())
+    # Add missing columns
+    for col in trained_features:
+        if col not in df.columns:
+            df[col] = 0
 
-print(predictions)
+    # Remove extra columns
+    df = df[trained_features]
+
+    # Prediction
+    predictions = model.predict(df)
+
+    return predictions
+
+
+if __name__ == "__main__":
+
+    predictions = predict("uploads/superstore_sales.csv")
+
+    print("\n========== PREDICTIONS ==========")
+    print(predictions[:10])
