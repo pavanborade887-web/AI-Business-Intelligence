@@ -1,23 +1,28 @@
-import sys
-print(sys.executable)
-
 from data_loader import load_data
 
-df = load_data("data/raw/superstore_sales.csv")
 
-df.head()
+def analyze_data(df):
+    print("\n========== DATASET OVERVIEW ==========")
 
-df.tail()
+    print(f"\nRows    : {df.shape[0]}")
+    print(f"Columns : {df.shape[1]}")
 
-df.shape
+    print("\n========== COLUMN NAMES ==========")
+    print(df.columns.tolist())
 
-df.columns
+    print("\n========== DATA TYPES ==========")
+    print(df.dtypes)
 
-df.info()
+    print("\n========== MISSING VALUES ==========")
+    print(df.isnull().sum())
 
-print("\nDataset Statistics:")
-print(df.describe())
+    print("\n========== DUPLICATE ROWS ==========")
+    print(df.duplicated().sum())
 
-print(df.isnull().sum())
+    print("\n========== SUMMARY STATISTICS ==========")
+    print(df.describe(include="all"))
 
-print(df.duplicated().sum())
+
+if __name__ == "__main__":
+    df = load_data("uploads/superstore_sales.csv")
+    analyze_data(df)
