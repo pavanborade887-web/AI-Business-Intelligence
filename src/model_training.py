@@ -1,151 +1,256 @@
-from data_loader import load_data
-from feature_engineering import feature_engineering
+# PART 1
+
+from src.data_loader import load_data
+from src.feature_engineering import feature_engineering
 
 from sklearn.model_selection import train_test_split
+
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 
 from sklearn.metrics import (
     r2_score,
     mean_absolute_error,
-    mean_squared_error,
+    mean_squared_error
 )
 
 import joblib
 import os
 
 
-# ==============================
-# Load Dataset
-# ==============================
+def train_model(file_path, target_column):
 
-df = load_data("uploads/superstore_sales.csv")
+    # ==========================
+    # Load Dataset
+    # ==========================
 
-# ==============================
-# Feature Engineering
-# ==============================
+    df = load_data(file_path)
 
-df = feature_engineering(df)
+    # ==========================
+    # Feature Engineering
+    # ==========================
 
-print("\n========== DATASET ==========")
-print(df.head())
+    df = feature_engineering(df)
 
-# ==============================
-# Show Numeric Columns
-# ==============================
+    # ==========================
+    # Check Target
+    # ==========================
 
-numeric_columns = df.select_dtypes(include="number").columns.tolist()
+    if target_column not in df.columns:
+        raise ValueError(
+            f"{target_column} not found in dataset."
+        )
 
-print("\n========== NUMERIC COLUMNS ==========")
+    # ==========================
+    # Features & Target
+    # ==========================
 
-for i, col in enumerate(numeric_columns, start=1):
-    print(f"{i}. {col}")
+    X = df.drop(columns=[target_column])
 
-# ==============================
-# User Select Target
-# ==============================
+    y = df[target_column]
 
-target_column = input("\nEnter Target Column: ")
+    # ==========================
+    # Train Test Split
+    # ==========================
 
-if target_column not in df.columns:
-    raise ValueError(f"{target_column} not found in dataset.")
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        random_state=42
+    )
 
-# ==============================
-# Features & Target
-# ==============================
 
-X = df.drop(columns=[target_column])
-y = df[target_column]
+    # PART 2
 
-print("\n========== FEATURES ==========")
-print(X.head())
+        # ==========================
+    # Linear Regression
+    # ==========================
 
-print("\n========== TARGET ==========")
-print(y.head())
+    lr_model = LinearRegression()
 
-print("\nFeature Shape :", X.shape)
-print("Target Shape  :", y.shape)
+    lr_model.fit(X_train, y_train)
 
-# ==============================
-# Train Test Split
-# ==============================
+    lr_predictions = lr_model.predict(X_test)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42
-)
+    lr_r2 = r2_score(y_test, lr_predictions)
 
-print("\n========== TRAIN TEST SPLIT ==========")
-print("Training Features :", X_train.shape)
-print("Testing Features  :", X_test.shape)
-print("Training Target   :", y_train.shape)
-print("Testing Target    :", y_test.shape)
+    lr_mae = mean_absolute_error(
+        y_test,
+        lr_predictions
+    )
 
-# ==============================
-# Linear Regression
-# ==============================
+    lr_rmse = mean_squared_error(
+        y_test,
+        lr_predictions
+    ) ** 0.5
 
-lr_model = LinearRegression()
+    # ==========================
+    # Decision Tree
+    # ==========================
 
-lr_model.fit(X_train, y_train)
+    dt_model = DecisionTreeRegressor(
+        random_state=42
+    )
 
-lr_predictions = lr_model.predict(X_test)
+    dt_model.fit(X_train, y_train)
 
-print("\n========== LINEAR REGRESSION ==========")
+    dt_predictions = dt_model.predict(X_test)
 
-lr_r2 = r2_score(y_test, lr_predictions)
+    dt_r2 = r2_score(y_test, dt_predictions)
 
-print("R2 Score :", lr_r2)
-print("MAE      :", mean_absolute_error(y_test, lr_predictions))
-print("RMSE     :", mean_squared_error(y_test, lr_predictions) ** 0.5)
+    dt_mae = mean_absolute_error(
+        y_test,
+        dt_predictions
+    )
 
-# ==============================
-# Random Forest
-# ==============================
+    dt_rmse = mean_squared_error(
+        y_test,
+        dt_predictions
+    ) ** 0.5
 
-rf_model = RandomForestRegressor(
-    n_estimators=100,
-    random_state=42
-)
+    # ==========================
+    # Random Forest
+    # ==========================
 
-rf_model.fit(X_train, y_train)
+    rf_model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42
+    )
 
-rf_predictions = rf_model.predict(X_test)
+    rf_model.fit(X_train, y_train)
 
-print("\n========== RANDOM FOREST ==========")
+    rf_predictions = rf_model.predict(X_test)
 
-rf_r2 = r2_score(y_test, rf_predictions)
+    rf_r2 = r2_score(y_test, rf_predictions)
 
-print("R2 Score :", rf_r2)
-print("MAE      :", mean_absolute_error(y_test, rf_predictions))
-print("RMSE     :", mean_squared_error(y_test, rf_predictions) ** 0.5)
+    rf_mae = mean_absolute_error(
+        y_test,
+        rf_predictions
+    )
 
-# ==============================
-# Select Best Model
-# ==============================
+    rf_rmse = mean_squared_error(
+        y_test,
+        rf_predictions
+    ) ** 0.5
 
-if rf_r2 > lr_r2:
-    best_model = rf_model
-    best_model_name = "Random Forest"
-else:
-    best_model = lr_model
-    best_model_name = "Linear Regression"
+    print("\n========== MODEL COMPARISON ==========")
 
-# Create models folder if it doesn't exist
-os.makedirs("models", exist_ok=True)
+    print("Linear Regression R2 :", lr_r2)
+    print("Decision Tree R2     :", dt_r2)
+    print("Random Forest R2     :", rf_r2)
 
-# Save model + metadata together
-model_info = {
-    "model": best_model,
-    "algorithm": best_model_name,
-    "target": target_column,
-    "features": X.columns.tolist()
-}
 
-joblib.dump(model_info, "models/final_model.pkl")
+    # PART 3
 
-print("\n========== FINAL MODEL ==========")
-print("Best Model :", best_model_name)
-print("Model Saved Successfully!")
+        # ==========================
+    # Compare Models
+    # ==========================
+
+    models = {
+
+        "Linear Regression": {
+            "model": lr_model,
+            "r2": lr_r2,
+            "mae": lr_mae,
+            "rmse": lr_rmse
+        },
+
+        "Decision Tree": {
+            "model": dt_model,
+            "r2": dt_r2,
+            "mae": dt_mae,
+            "rmse": dt_rmse
+        },
+
+        "Random Forest": {
+            "model": rf_model,
+            "r2": rf_r2,
+            "mae": rf_mae,
+            "rmse": rf_rmse
+        }
+
+    }
+
+    # ==========================
+    # Select Best Model
+    # ==========================
+
+    best_model_name = max(
+        models,
+        key=lambda x: models[x]["r2"]
+    )
+
+    best_model = models[best_model_name]["model"]
+
+    # ==========================
+    # Save Model
+    # ==========================
+
+    os.makedirs("models", exist_ok=True)
+
+    model_info = {
+
+        "model": best_model,
+
+        "algorithm": best_model_name,
+
+        "target": target_column,
+
+        "features": X.columns.tolist()
+
+    }
+
+    joblib.dump(
+        model_info,
+        "models/final_model.pkl"
+    )
+
+    # ==========================
+    # Return Result
+    # ==========================
+
+    return {
+
+        "Best Model": best_model_name,
+
+        "R2 Score": models[best_model_name]["r2"],
+
+        "MAE": models[best_model_name]["mae"],
+
+        "RMSE": models[best_model_name]["rmse"],
+
+        "Compared Models": {
+
+            "Linear Regression": lr_r2,
+
+            "Decision Tree": dt_r2,
+
+            "Random Forest": rf_r2
+
+        }
+
+    }
+
+# PART 4
+
+# ==========================
+# Run Directly
+# ==========================
+
+if __name__ == "__main__":
+
+    file_path = "uploads/superstore_sales.csv"
+
+    target_column = input("\nEnter Target Column : ")
+
+    result = train_model(
+        file_path,
+        target_column
+    )
+
+    print("\n========== TRAINING RESULT ==========\n")
+
+    for key, value in result.items():
+        print(f"{key} : {value}")

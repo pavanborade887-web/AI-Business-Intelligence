@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from data_loader import load_data
+from src.data_loader import load_data
 
 
 def visualize_data(df):

@@ -1,7 +1,7 @@
 import joblib
 
-from data_loader import load_data
-from feature_engineering import feature_engineering
+from src.data_loader import load_data
+from src.feature_engineering import feature_engineering
 
 
 def predict(file_path):
@@ -37,7 +37,7 @@ def predict(file_path):
     # Prediction
     predictions = model.predict(df)
 
-    return predictions
+    return predictions.tolist()
 
 
 if __name__ == "__main__":

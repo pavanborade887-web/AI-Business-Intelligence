@@ -1,28 +1,29 @@
-from data_loader import load_data
+from src.data_loader import load_data
 
 
-def analyze_data(df):
-    print("\n========== DATASET OVERVIEW ==========")
+def analyze_data(file_path):
 
-    print(f"\nRows    : {df.shape[0]}")
-    print(f"Columns : {df.shape[1]}")
+    df = load_data(file_path)
 
-    print("\n========== COLUMN NAMES ==========")
-    print(df.columns.tolist())
+    analysis = {
+        "rows": df.shape[0],
+        "columns": df.shape[1],
+        "column_names": df.columns.tolist(),
+        "data_types": df.dtypes.astype(str).to_dict(),
+        "missing_values": df.isnull().sum().to_dict(),
+        "duplicate_rows": int(df.duplicated().sum())
+    }
 
-    print("\n========== DATA TYPES ==========")
-    print(df.dtypes)
-
-    print("\n========== MISSING VALUES ==========")
-    print(df.isnull().sum())
-
-    print("\n========== DUPLICATE ROWS ==========")
-    print(df.duplicated().sum())
-
-    print("\n========== SUMMARY STATISTICS ==========")
-    print(df.describe(include="all"))
+    return analysis
 
 
 if __name__ == "__main__":
-    df = load_data("uploads/superstore_sales.csv")
-    analyze_data(df)
+
+    result = analyze_data("uploads/superstore_sales.csv")
+
+    print("\n========== DATASET ANALYSIS ==========\n")
+
+    for key, value in result.items():
+        print(f"{key} :")
+        print(value)
+        print()
