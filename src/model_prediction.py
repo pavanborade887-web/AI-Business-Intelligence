@@ -1,48 +1,45 @@
 import joblib
-
-from src.data_loader import load_data
-from src.feature_engineering import feature_engineering
+import pandas as pd
 
 
-def predict(file_path):
-    """
-    Predict using the trained model.
-    """
+def predict(user_input):
 
-    # Load model information
+    # ==========================
+    # Load Saved Model
+    # ==========================
+
     model_info = joblib.load("models/final_model.pkl")
 
     model = model_info["model"]
-    target = model_info["target"]
+
     trained_features = model_info["features"]
 
-    # Load new dataset
-    df = load_data(file_path)
+    # ==========================
+    # Create DataFrame
+    # ==========================
 
-    # Apply feature engineering
-    df = feature_engineering(df)
+    df = pd.DataFrame([user_input])
 
-    # Remove target column if present
-    if target in df.columns:
-        df = df.drop(columns=[target])
+    # ==========================
+    # Add Missing Features
+    # ==========================
 
-    # Add missing columns
-    for col in trained_features:
-        if col not in df.columns:
-            df[col] = 0
+    for feature in trained_features:
 
-    # Remove extra columns
+        if feature not in df.columns:
+
+            df[feature] = 0
+
+    # ==========================
+    # Keep Same Order
+    # ==========================
+
     df = df[trained_features]
 
+    # ==========================
     # Prediction
-    predictions = model.predict(df)
+    # ==========================
 
-    return predictions.tolist()
+    prediction = model.predict(df)
 
-
-if __name__ == "__main__":
-
-    predictions = predict("uploads/superstore_sales.csv")
-
-    print("\n========== PREDICTIONS ==========")
-    print(predictions[:10])
+    return float(prediction[0])

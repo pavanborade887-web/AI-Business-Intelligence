@@ -1,5 +1,7 @@
 import pandas as pd
-from flask import Flask, jsonify, request
+from src.chart_data import get_chart_data
+from src.pdf_report import generate_report
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import joblib
 import os
@@ -113,34 +115,38 @@ def train():
         "result": result
     })
 
-@app.route("/predict", methods=["GET"])
-def prediction():
+@app.route("/model-info", methods=["GET"])
+def model_info():
 
-    global CURRENT_FILE
+    import os
+    import joblib
 
-    if CURRENT_FILE is None:
+    if not os.path.exists("models/final_model.pkl"):
         return jsonify({
             "success": False,
-            "message": "No dataset uploaded."
+            "message": "No trained model found."
         }), 400
 
-    predictions = predict(CURRENT_FILE)
+    model = joblib.load("models/final_model.pkl")
 
     return jsonify({
-    "success": True,
-    "total_predictions": len(predictions),
+        "success": True,
+        "algorithm": model["algorithm"],
+        "target": model["target"],
+        "features": model["features"]
+    })
 
-    "sample_predictions": predictions[:10],
+@app.route("/predict", methods=["POST"])
+def prediction():
 
-    "statistics": {
-        "min_prediction": round(min(predictions), 2),
-        "max_prediction": round(max(predictions), 2),
-        "average_prediction": round(
-            sum(predictions) / len(predictions),
-            2
-        )
-    }
-})
+    data = request.get_json()
+
+    result = predict(data)
+
+    return jsonify({
+        "success": True,
+        "prediction": result
+    })
 
 
 @app.route("/dataset-info", methods=["GET"])
@@ -189,6 +195,60 @@ def dataset_info():
         "training_status": model_status
 
     })
+@app.route("/download-csv", methods=["GET"])
+def download_csv():
+
+    global CURRENT_FILE
+
+    if CURRENT_FILE is None:
+        return jsonify({
+            "success": False,
+            "message": "No dataset uploaded."
+        }), 404
+
+    return send_file(
+        CURRENT_FILE,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=os.path.basename(CURRENT_FILE)
+    )
+
+@app.route("/download-report", methods=["GET"])
+def download_report():
+
+    global CURRENT_FILE
+
+    if CURRENT_FILE is None:
+        return jsonify({
+            "success": False,
+            "message": "No dataset uploaded."
+        }), 404
+
+    analysis = analyze_data(CURRENT_FILE)
+
+    model_path = "models/final_model.pkl"
+
+    target = "Not Trained"
+    algorithm = "Not Trained"
+
+    if os.path.exists(model_path):
+        model = joblib.load(model_path)
+        target = model["target"]
+        algorithm = model["algorithm"]
+
+    pdf_path = generate_report(
+        dataset_name=os.path.basename(CURRENT_FILE),
+        rows=analysis["rows"],
+        columns=analysis["columns"],
+        target=target,
+        algorithm=algorithm
+    )
+
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name="AI_Business_Intelligence_Report.pdf"
+    )
 
 @app.route("/preview", methods=["GET"])
 def preview():
@@ -197,19 +257,45 @@ def preview():
 
     if CURRENT_FILE is None:
         return jsonify({
-            "success": False,
-            "message": "No dataset uploaded."
-        }), 400
+        "success": False,
+        "message": "No dataset uploaded.",
+        "dataset_name": None,
+        "rows": 0,
+        "columns": 0,
+        "target": None,
+        "best_model": None,
+        "training_status": "Not Trained"
+    }), 200
 
     df = load_data(CURRENT_FILE)
 
     preview_data = df.head(10)
 
     return jsonify({
+    "success": True,
+    "dataset_name": os.path.basename(CURRENT_FILE),
+    "total_rows": len(df),
+    "total_columns": len(df.columns),
+    "columns": df.columns.tolist(),
+    "preview": preview_data.to_dict(orient="records")
+})
+
+@app.route("/charts", methods=["GET"])
+def charts():
+
+    global CURRENT_FILE
+
+    if CURRENT_FILE is None:
+        return jsonify({
+            "success": False,
+            "message": "No dataset uploaded."
+        }), 404
+
+    return jsonify({
         "success": True,
-        "total_rows": len(df),
-        "preview": preview_data.to_dict(orient="records")
+        "charts": get_chart_data(CURRENT_FILE)
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True)
