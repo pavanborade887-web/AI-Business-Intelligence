@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Plot from "react-plotly.js";
 
@@ -14,6 +15,7 @@ import {
 function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const [data, setData] = useState({
     dataset_name: "No Dataset",

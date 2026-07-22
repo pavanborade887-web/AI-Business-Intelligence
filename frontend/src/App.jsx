@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
 import Preview from "./pages/Preview";
@@ -14,10 +16,19 @@ function App() {
   return (
     <Routes>
       {/* Redirect Root */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Main Layout */}
-      <Route element={<MainLayout />}>
+      {/* Login */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/preview" element={<Preview />} />

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaUpload,
@@ -8,9 +8,17 @@ import {
   FaMagic,
   FaFileAlt,
   FaCog,
+  FaSignOutAlt,
 } from "react-icons/fa";
 
 function Sidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login", { replace: true });
+  };
+
   const linkClass = ({ isActive }) =>
     `w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
       isActive
@@ -73,13 +81,21 @@ function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="p-5 border-t border-slate-800">
+      <div className="p-5 border-t border-slate-800 space-y-3">
 
         <button
           className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-300"
         >
           <FaCog />
           <span>Settings</span>
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+        >
+          <FaSignOutAlt />
+          <span>Logout</span>
         </button>
 
       </div>

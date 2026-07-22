@@ -1,4 +1,5 @@
 import pandas as pd
+from werkzeug.security import generate_password_hash, check_password_hash
 from src.chart_data import get_chart_data
 from src.pdf_report import generate_report
 from flask import Flask, jsonify, request, send_file
@@ -21,6 +22,9 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Enable CORS
 CORS(app)
+ADMIN_EMAIL = "admin@aibi.com"
+
+ADMIN_PASSWORD_HASH = generate_password_hash("admin123")
 
 
 @app.route("/", methods=["GET"])
@@ -30,6 +34,41 @@ def home():
         "version": "1.0",
         "status": "Running"
     })
+
+@app.route("/login", methods=["POST"])
+def login():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "Invalid request."
+        }), 400
+
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    if email != ADMIN_EMAIL:
+        return jsonify({
+            "success": False,
+            "message": "Invalid email or password."
+        }), 401
+
+    if not check_password_hash(ADMIN_PASSWORD_HASH, password):
+        return jsonify({
+            "success": False,
+            "message": "Invalid email or password."
+        }), 401
+
+    return jsonify({
+        "success": True,
+        "message": "Login Successful",
+        "user": {
+            "name": "Administrator",
+            "email": ADMIN_EMAIL
+        }
+    }), 200
 
 @app.route("/upload", methods=["POST"])
 def upload_file():

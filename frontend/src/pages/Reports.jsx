@@ -186,7 +186,7 @@ function Reports() {
 
             <p>
               <span className="font-semibold text-white">Missing Values :</span>{" "}
-              {analysis.total_missing_values || 0}
+              {analysis.total_missing}
             </p>
 
             <p>
@@ -196,12 +196,12 @@ function Reports() {
 
             <p>
               <span className="font-semibold text-white">Numeric Columns :</span>{" "}
-              {analysis.numeric_columns?.length || 0}
+              {analysis.numeric_columns || 0}
             </p>
 
             <p>
               <span className="font-semibold text-white">Categorical Columns :</span>{" "}
-              {analysis.categorical_columns?.length || 0}
+              {analysis.categorical_columns || 0}
             </p>
 
           </div>

@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { login } from "../services/authService";
+import { useNavigate } from "react-router-dom";
+
 import logo from "../assets/images/aibi-logo.png";
+
 import {
   FaEnvelope,
   FaLock,
@@ -8,7 +12,43 @@ import {
 } from "react-icons/fa";
 
 function Login() {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+const handleLogin = async (e) => {
+  e.preventDefault();
+
+  setError("");
+
+  if (!email || !password) {
+    setError("Please enter email and password.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await login(email, password);
+
+    if (response.success) {
+      navigate("/dashboard");
+    } else {
+      setError(response.message);
+    }
+  } catch (err) {
+    setError(
+      err.response?.data?.message || "Login failed."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -67,9 +107,9 @@ function Login() {
             Securely access your dashboard
           </p>
 
-          <form className="mt-8">
+          <form onSubmit={handleLogin} className="mt-8">
 
-            {/* EMAIL */}
+                      {/* EMAIL */}
 
             <label className="block text-slate-300 mb-2">
               Email Address
@@ -82,6 +122,8 @@ function Login() {
               <input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-transparent p-4 outline-none text-white"
               />
 
@@ -100,14 +142,14 @@ function Login() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-transparent p-4 outline-none text-white"
               />
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword(!showPassword)
-                }
+                onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
                   <FaEyeSlash className="text-slate-400" />
@@ -137,10 +179,18 @@ function Login() {
 
             </div>
 
+            {error && (
+              <p className="mt-4 text-center text-red-400">
+                {error}
+              </p>
+            )}
+
             <button
-              className="mt-8 w-full rounded-xl bg-blue-600 p-4 font-semibold text-white transition hover:bg-blue-700"
+              type="submit"
+              disabled={loading}
+              className="mt-8 w-full rounded-xl bg-blue-600 p-4 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
 
           </form>
